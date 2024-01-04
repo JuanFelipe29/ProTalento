@@ -1,95 +1,110 @@
 import readchar
 import os
+import random
 
-def limpiar_terminal():
-    # Borrar la terminal según el sistema operativo
-    os.system('cls' if os.name == 'nt' else 'clear')
+class Juego:
+    def __init__(self, mapa, inicio, final):
+        self.mapa = mapa
+        self.inicio = inicio
+        self.final = final
 
-def imprimir_numero_y_limpiar(nombre_participante, numero):
-    limpiar_terminal()
-    print(f"{nombre_participante} presiona la tecla 'n'")
-    print(f"Número actual: {numero}")
+    def limpiar_terminal(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
 
-def imprimir_laberinto(laberinto):
-    for fila in laberinto:
-        print("".join(fila))
+    def imprimir_numero_y_limpiar(self, nombre_participante, numero):
+        self.limpiar_terminal()
+        print(f"{nombre_participante} presiona la tecla 'n'")
+        print(f"Número actual: {numero}")
 
-def main_loop(laberinto, inicio, final):
-    px, py = inicio
-    numero = 0
+    def imprimir_laberinto(self):
+        for fila in self.mapa:
+            print("".join(fila))
 
-    while (px, py) != final:
+    def main_loop(self, nombre_participante):
+        px, py = self.inicio
+        numero = 0
 
-        # Lee un caracter del teclado
-        caracter = readchar.readkey()
+        while (px, py) != self.final:
+            caracter = readchar.readkey()
+            print(f"{nombre_participante} presiona la tecla {caracter}")
 
-        # Imprime el caracter leído
-        print(f"{nombre_participante} presiona la tecla {caracter}")
+            if caracter == readchar.key.UP:
+                print("¡Tecla hacia arriba presionada! Terminando el juego.")
+                break
 
-        # Termina el bucle si se presiona la tecla ↑
-        if caracter == readchar.key.UP:
-            print("¡Tecla hacia arriba presionada! Terminando el juego.")
-            break
+            if caracter == 'n':
+                numero += 1
+                self.imprimir_numero_y_limpiar(nombre_participante, numero)
 
-        # Incrementar el número si se presiona la tecla 'n'
-        if caracter == 'n':
-            numero += 1
-            imprimir_numero_y_limpiar(nombre_participante, numero)
+            if numero == 50:
+                print("¡Has alcanzado el número 50! Terminando el juego.")
+                break
 
-        # Rompe el bucle si se alcanza el número 50
-        if numero == 50:
-            print("¡Has alcanzado el número 50! Terminando el juego.")
-            break
+            self.mapa[py][px] = 'P'
+            self.limpiar_terminal()
+            self.imprimir_laberinto()
 
-        laberinto[py][px] = 'P'
-        limpiar_terminal()
-        imprimir_laberinto(laberinto)
+            if (
+                caracter == readchar.key.UP
+                and py > 0
+                and self.mapa[py - 1][px] != '#'
+            ):
+                self.mapa[py][px] = '.'
+                py -= 1
+            elif (
+                caracter == readchar.key.DOWN
+                and py < len(self.mapa) - 1
+                and self.mapa[py + 1][px] != '#'
+            ):
+                self.mapa[py][px] = '.'
+                py += 1
+            elif (
+                caracter == readchar.key.LEFT
+                and px > 0
+                and self.mapa[py][px - 1] != '#'
+            ):
+                self.mapa[py][px] = '.'
+                px -= 1
+            elif (
+                caracter == readchar.key.RIGHT
+                and px < len(self.mapa[0]) - 1
+                and self.mapa[py][px + 1] != '#'
+            ):
+                self.mapa[py][px] = '.'
+                px += 1
 
-        if caracter == readchar.key.UP and py > 0 and laberinto[py - 1][px] != '#':
-            laberinto[py][px] = '.'
-            py -= 1
-        elif caracter == readchar.key.DOWN and py < len(laberinto) - 1 and laberinto[py + 1][px] != '#':
-            laberinto[py][px] = '.'
-            py += 1
-        elif caracter == readchar.key.LEFT and px > 0 and laberinto[py][px - 1] != '#':
-            laberinto[py][px] = '.'
-            px -= 1
-        elif caracter == readchar.key.RIGHT and px < len(laberinto[0]) - 1 and laberinto[py][px + 1] != '#':
-            laberinto[py][px] = '.'
-            px += 1
+class JuegoArchivo(Juego):
+    def __init__(self, nombre_archivo):
+        # Componer el path completo utilizando ruta relativa
+        path_completo = os.path.join(os.path.dirname(__file__), nombre_archivo)
 
+        # Leer el archivo y obtener los datos del mapa
+        mapa_str = self.leer_archivo(path_completo)
+        mapa = [list(fila) for fila in mapa_str.split("\n") if fila]
+
+        # Obtener las coordenadas de inicio y final desde el mapa
+        inicio = tuple(map(int, mapa.pop().split()))
+        final = tuple(map(int, mapa.pop().split()))
+
+        # Llamar al constructor de la clase base (Juego) con los datos obtenidos
+        super().__init__(mapa, inicio, final)
+
+    def leer_archivo(self, path):
+        with open(path, 'r') as archivo:
+            return archivo.read().strip()
+
+# Obtener el nombre del participante
 nombre_participante = input("Ingrese su nombre para iniciar: \n")
 print(f"Bienvenido al Juego {nombre_participante}")
 
-# Mapa del laberinto
-laberinto_str = """..###################
-....#...............#
-#.#.#####.#########.#
-#.#...........#.#.#.#
-#.#####.#.###.#.#.#.#
-#...#.#.#.#.....#...#
-#.#.#.#######.#.#####
-#.#...#.....#.#...#.#
-#####.#####.#.#.###.#
-#.#.#.#.......#...#.#
-#.#.#.#######.#####.#
-#...#...#...#.#.#...#
-###.#.#####.#.#.###.#
-#.#...#.......#.....#
-#.#.#.###.#.#.###.#.#
-#...#.#...#.#.....#.#
-###.#######.###.###.#
-#.#.#.#.#.#...#.#...#
-#.#.#.#.#.#.#.#.#.#.#
-#.....#.....#.#.#.#.#
-###################.."""
+# Crear una instancia de JuegoArchivo para el mapa1.txt
+juego_archivo1 = JuegoArchivo(nombre_archivo="mapa1.txt")
 
-# Convertir el mapa a una matriz de caracteres
-laberinto = [list(fila) for fila in laberinto_str.split("\n")]
+# Iniciar el juego desde la instancia de JuegoArchivo
+juego_archivo1.main_loop(nombre_participante)
 
-# Coordenadas de inicio y final
-inicio = (0, 0)
-final = (len(laberinto[0]) - 1, len(laberinto) - 1)
+# Crear una instancia de JuegoArchivo para el mapa2.txt
+juego_archivo2 = JuegoArchivo(nombre_archivo="mapa2.txt")
 
-# Iniciar el juego
-main_loop(laberinto, inicio, final)
+# Iniciar el juego desde la instancia de JuegoArchivo
+juego_archivo2.main_loop(nombre_participante)
