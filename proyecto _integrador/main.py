@@ -75,36 +75,36 @@ class Juego:
 
 class JuegoArchivo(Juego):
     def __init__(self, nombre_archivo):
-        # Componer el path completo utilizando ruta relativa
         path_completo = os.path.join(os.path.dirname(__file__), nombre_archivo)
-
-        # Leer el archivo y obtener los datos del mapa
-        mapa_str = self.leer_archivo(path_completo)
-        mapa = [list(fila) for fila in mapa_str.split("\n") if fila]
-
-        # Obtener las coordenadas de inicio y final desde el mapa
-        inicio = tuple(map(int, mapa.pop().split()))
-        final = tuple(map(int, mapa.pop().split()))
-
-        # Llamar al constructor de la clase base (Juego) con los datos obtenidos
+        mapa, inicio, final = self.leer_archivo(path_completo)
         super().__init__(mapa, inicio, final)
 
     def leer_archivo(self, path):
         with open(path, 'r') as archivo:
-            return archivo.read().strip()
+            # La primera línea contiene las coordenadas de inicio y final
+            inicio_x, inicio_y, final_x, final_y = map(int, archivo.readline().strip().split())
+
+            # El resto del archivo es el mapa
+            mapa = [list(line.strip()) for line in archivo]
+
+        inicio = (inicio_x, inicio_y)
+        final = (final_x, final_y)
+
+        return mapa, inicio, final
+
 
 # Obtener el nombre del participante
 nombre_participante = input("Ingrese su nombre para iniciar: \n")
 print(f"Bienvenido al Juego {nombre_participante}")
 
 # Crear una instancia de JuegoArchivo para el mapa1.txt
-juego_archivo1 = JuegoArchivo(nombre_archivo="mapa1.txt")
+juego_archivo1 = JuegoArchivo(nombre_archivo="map1.txt")
 
 # Iniciar el juego desde la instancia de JuegoArchivo
 juego_archivo1.main_loop(nombre_participante)
 
 # Crear una instancia de JuegoArchivo para el mapa2.txt
-juego_archivo2 = JuegoArchivo(nombre_archivo="mapa2.txt")
+juego_archivo2 = JuegoArchivo(nombre_archivo="map2.txt")
 
 # Iniciar el juego desde la instancia de JuegoArchivo
 juego_archivo2.main_loop(nombre_participante)
